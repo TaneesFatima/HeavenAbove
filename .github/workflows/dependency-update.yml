@@ -10,23 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Save outdated dependencies for logs
+      - name: Save npm outdated logs
+        run: npm outdated > outdated.txt || true
+
+      # Update all dependencies
       - name: Update all dependencies
+        run: npm update
+
+      # Configure Git for commit
+      - name: Configure Git
         run: |
-          npm update
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Commit updated dependencies
       - name: Commit updated dependencies
         run: |
           git add package.json package-lock.json
@@ -36,6 +48,7 @@ jobs:
             echo "No changes to commit"
           fi
 
+      # Create Pull Request
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
@@ -45,3 +58,10 @@ jobs:
           base: main
           branch: auto/dependency-updates
           signoff: true
+
+      # Upload outdated dependencies as artifact
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-logs
+          path: outdated.txt
