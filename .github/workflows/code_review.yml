@@ -44,13 +44,4 @@ jobs:
           name: code-review-reports
           path: reports/
 
-      # 7. Comment on PR with summary (optional)
-      - name: Comment PR with summary
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **Code Review Summary**
-            - ESLint and test reports are generated and available as artifacts.
-            - Please check the reports: [Artifacts](https://github.com/${{ github.repository }}/suites/${{ github.run_id }}/artifacts)
+     
