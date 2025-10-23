@@ -25,10 +25,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Run the scheduled task script
+      # Run the scheduled task script and save logs
       - name: Update Heavens Above Data
-        run: npm run scrape || echo "Scraping failed, check logs!"
+        run: |
+          echo "Starting scheduled data update..."
+          npm run scrape > update_log.txt 2>&1 || echo "Scraping failed, check logs!"
+          echo "Task completed at $(date)" >> update_log.txt
+
+      # Upload log as artifact
+      - name: Upload update log
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-update-log
+          path: update_log.txt
 
       # Optional: Confirm success
-      - name: Task completed
-        run: echo "Scheduled data update workflow finished!"
+      - name: Final confirmation
+        run: echo "Scheduled data update workflow finished successfully!"
