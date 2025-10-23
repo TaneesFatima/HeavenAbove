@@ -1,58 +1,38 @@
-name: Deployment Pipeline
+name: Deploy to Vercel
 
-# Trigger workflow on push to main branch
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Step 3: Install dependencies
       - name: Install dependencies
-        working-directory: ./heavenAbove
         run: |
-          echo "Installing project dependencies..."
           npm install
-
-      # Step 4: Run linting (optional)
-      - name: Run lint check
         working-directory: ./heavenAbove
-        run: |
-          echo "Running lint check..."
-          npm run lint || echo "Linting failed!"
 
-      # Step 5: Run tests
       - name: Run tests
-        working-directory: ./heavenAbove
         run: |
-          echo "Running test cases..."
-          npm test || echo "Some tests failed!"
+          npm test
+        working-directory: ./heavenAbove
 
-      # Step 6: Deploy to Vercel
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
+        uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-args: "--prod"
-          working-directory: ./heavenAbove
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-
-      # Step 7: Final status
-      - name: Final status
-        run: echo "Deployment workflow completed!"
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'  # deploy to production
+          working-directory: ./heavenAbove
 
