@@ -1,66 +1,47 @@
-name: Update Project Dependencies
+name: Automated Dependency Updates
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'  # daily at 3:00 AM UTC
+    - cron: '0 4 * * *'  # daily at 4 AM UTC
 
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Install current dependencies
       - name: Install dependencies
         run: npm install
 
-      # Check for outdated dependencies
-      - name: Check for outdated packages
-        run: |
-          echo "Checking for outdated dependencies..."
-          npm outdated || echo "All packages are up to date"
-
-      # Update all dependencies
       - name: Update all dependencies
         run: |
           npm update
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Commit updated dependencies
+        run: |
+          git add package.json package-lock.json
           if [ -n "$(git status --porcelain)" ]; then
-            BRANCH_NAME="auto/dependency-updates-$(date +%s)"
-            git checkout -b $BRANCH_NAME
-            git add package.json package-lock.json
-            git commit -m "chore: update all project dependencies"
-            echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+            git commit -m "chore: update dependencies"
           else
-            echo "No dependency updates found"
+            echo "No changes to commit"
           fi
 
-      # Optional: Run tests before creating PR
-      - name: Run tests
-        if: env.BRANCH_NAME
-        run: |
-          npm test || exit 1
-
-      # Create a Pull Request if updates exist
       - name: Create Pull Request
-        if: env.BRANCH_NAME
         uses: peter-evans/create-pull-request@v5
         with:
-          branch: ${{ env.BRANCH_NAME }}
+          commit-message: "chore: update dependencies"
           title: "Automated Dependency Updates"
-          body: |
-            This pull request updates project dependencies automatically.
-            Please review and merge if all tests pass.
+          body: "This PR updates dependencies automatically."
           base: main
+          branch: auto/dependency-updates
+          signoff: true
