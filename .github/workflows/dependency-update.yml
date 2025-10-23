@@ -1,17 +1,16 @@
-name: Update Dependencies
+name: Update Project Dependencies
 
-# Trigger manually or on a schedule (e.g., weekly)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * 0'  # every Sunday at 3 AM UTC
+    - cron: '0 3 * * *'  # daily at 3:00 AM UTC
 
 jobs:
   update-dependencies:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
+      # Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -21,29 +20,47 @@ jobs:
         with:
           node-version: '20'
 
-      # Install dependencies
+      # Install current dependencies
       - name: Install dependencies
         run: npm install
 
-      # Check outdated dependencies
-      - name: Check outdated packages
-        run: npm outdated || echo "All dependencies up-to-date"
+      # Check for outdated dependencies
+      - name: Check for outdated packages
+        run: |
+          echo "Checking for outdated dependencies..."
+          npm outdated || echo "All packages are up to date"
 
-      # Update dependencies
-      - name: Update dependencies
+      # Update all dependencies
+      - name: Update all dependencies
         run: |
           npm update
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b auto/dependency-updates
-          git add package.json package-lock.json
-          git commit -m "chore: update npm dependencies" || echo "No changes to commit"
 
-      # Create Pull Request
+          if [ -n "$(git status --porcelain)" ]; then
+            BRANCH_NAME="auto/dependency-updates-$(date +%s)"
+            git checkout -b $BRANCH_NAME
+            git add package.json package-lock.json
+            git commit -m "chore: update all project dependencies"
+            echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          else
+            echo "No dependency updates found"
+          fi
+
+      # Optional: Run tests before creating PR
+      - name: Run tests
+        if: env.BRANCH_NAME
+        run: |
+          npm test || exit 1
+
+      # Create a Pull Request if updates exist
       - name: Create Pull Request
+        if: env.BRANCH_NAME
         uses: peter-evans/create-pull-request@v5
         with:
-          branch: auto/dependency-updates
-          title: "Update Dependencies"
-          body: "Automated dependency update via GitHub Actions"
+          branch: ${{ env.BRANCH_NAME }}
+          title: "Automated Dependency Updates"
+          body: |
+            This pull request updates project dependencies automatically.
+            Please review and merge if all tests pass.
           base: main
