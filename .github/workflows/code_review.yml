@@ -1,0 +1,51 @@
+name: Code Review Workflow
+
+# Trigger on pull requests to main (or any branch you want)
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run lint checks (code style / formatting)
+      - name: Lint code
+        run: npm run lint || echo "Linting failed, see details"
+
+      # Step 5: Run unit tests
+      - name: Run tests
+        run: npm test || echo "Some tests failed"
+
+      # Step 6: Run security vulnerability check
+      - name: Audit dependencies for security
+        run: npm audit --audit-level=moderate || echo "Vulnerabilities found, check npm audit report"
+
+      # Step 7: Generate code quality report
+      - name: Generate ESLint report
+        run: |
+          mkdir -p eslint-report
+          npx eslint . -f json -o eslint-report/report.json || true
+
+      # Step 8: Upload code quality report as artifact
+      - name: Upload ESLint report
+        uses: actions/upload-artifact@v3
+        with:
+          name: eslint-report
+          path: eslint-report/report.json
