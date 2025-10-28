@@ -1,0 +1,40 @@
+name: Documentation Deployment
+
+on:
+  push:
+    branches: [main]   # Runs whenever main branch updates
+  workflow_dispatch:    # Allows manual run from Actions tab
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare documentation folder
+        run: |
+          mkdir -p site
+          cp -r docs/* site/
+          echo "Documentation build complete."
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
