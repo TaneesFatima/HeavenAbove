@@ -1,0 +1,47 @@
+name: Generate Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*'      # Trigger only on version tags starting with "v"
+  release:
+    types:
+      - published   # Trigger when a release is published
+
+permissions:
+  contents: write
+
+jobs:
+  release-notes:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Generate release notes based on commits since last tag
+      - name: Generate release notes
+        id: notes
+        run: |
+          echo "Generating release notes..."
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ || echo "")
+          CURRENT_TAG=$(git describe --tags --exact-match || echo "$GITHUB_REF_NAME")
+          
+          if [ -z "$LAST_TAG" ]; then
+            git log --pretty=format:"- %s (%an)" > release-notes.md
+          else
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%an)" > release-notes.md
+          fi
+          
+          echo "Release notes generated for $CURRENT_TAG"
+          cat release-notes.md
+
+      # 3. Commit release notes to repository
+      - name: Commit release notes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add release-notes.md
+          git commit -m "Update release notes for $GITHUB_REF_NAME [skip ci]" || echo "No changes to commit"
+          git push
