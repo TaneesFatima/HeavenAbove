@@ -1,0 +1,12 @@
+site_name: HeavenAbove Docs
+site_url: https://taneesfatima.github.io/HeavenAbove/
+theme:
+  name: material
+plugins:
+  - search
+  - awesome-pages
+
+nav:
+  - Home: index.md
+  - Guide:
+      - Introduction: guide/introduction.md
