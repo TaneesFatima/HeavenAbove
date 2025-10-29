@@ -10,3 +10,4 @@ This documentation explains project setup, workflows, and automation.
 - Dependency updates
 - Code review checks
 - Scheduled tasks
+- xyz
