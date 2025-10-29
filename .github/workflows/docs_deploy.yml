@@ -9,28 +9,28 @@ permissions:
   contents: write
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          node-version: '20'
+          python-version: '3.11'
 
-      - name: Install Docsify CLI
-        run: npm install -g docsify-cli
-
-      - name: Initialize Docsify (if not already initialized)
+      - name: Install MkDocs and Plugins
         run: |
-          mkdir -p docs
-          echo '# My Awesome Docs' > docs/README.md
+          pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-search
+          
+      - name: Build MkDocs site
+        run: |
+          mkdocs build --clean
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          publish_dir: ./site
